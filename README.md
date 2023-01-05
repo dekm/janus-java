@@ -49,6 +49,9 @@ Once the version number has been updated you can run the build process.
 mvn clean install
 ```
 
+git tag -a v0.0.1_bootstrap -m "testing a bootstrap release"
+git push origin v0.0.1_bootstrap
+
 In the next step we must update the `fxJarUrl` in UpdateWalletConfig.java. To generate this new url we will have to create a release in this repo [unigrid-update](https://github.com/unigrid-project/unigrid-update/releases). Create a new tag using this format `v1.0.1` then name the release title the version number `1.0.1`.
 
 Now upload the `fx-1.0.1-SNAPSHOT.jar` located in `fx\target` and publish the release. We can now get the url to this jar which should be in this format based on the version number created `https://github.com/unigrid-project/unigrid-update/releases/download/v1.0.1/fx-1.0.1-SNAPSHOT.jar`
