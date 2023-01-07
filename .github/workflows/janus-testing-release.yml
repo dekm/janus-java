@@ -1,0 +1,49 @@
+name: Janus Testing Release
+
+on: 
+  repository_dispatch:
+    types: [janus-testing-release]
+env:
+    INCLUDE_CONFIG_FILES_MATCHER: 'config/target/config*test.xml'
+jobs:
+  build:
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        repository: ${{ github.event.client_payload.source_repo }}
+        branch: ${{ github.event.client_payload.source_branch }}
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    - name: Build config jar
+      run: xvfb-run -a mvn -f config/pom.xml clean install -Dmaven.test.skip=true -B -e
+    - name: Build fx jar
+      run: |
+        mvn -f fx/pom.xml versions:set -DnewVersion=${{ github.event.client_payload.tag_name }} -DremoveSnapshot=true
+        xvfb-run -a mvn clean install -Dmaven.test.skip=true -B -e
+    - name: Create release
+      id: create-release 
+      uses: softprops/action-gh-release@v1
+      env:
+          GITHUB_REPOSITORY: ${{ github.event.client_payload.release_repo }}
+      with:
+        token: ${{secrets.UPDATE_TESTING_SECRET}}
+        repository: ${{ github.event.client_payload.release_repo }}
+        prerelease: true
+        draft: true
+        tag_name: v${{ github.event.client_payload.tag_name }}
+        files: fx/target/fx-${{ github.event.client_payload.tag_name }}.jar
+    - name: Update Testing Repo
+      uses: actions/checkout@v2
+      with:
+        repository: ${{ github.event.client_payload.release_repo }}
+    - name: Copy updated XML files
+      run: cp ${{ github.workspace }}/${{ env.INCLUDE_CONFIG_FILES_MATCHER }} ${{ github.workspace }}/
+    - name: Add updated XML files to git
+      run: git add ${{ env.INCLUDE_CONFIG_FILES_MATCHER }}
+    - name: Commit and push changes
+      run: git commit -a -m "Updating XML files" && git push
