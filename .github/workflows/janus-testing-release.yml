@@ -30,7 +30,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       env:
           GITHUB_REPOSITORY: ${{ github.event.client_payload.source_owner }}/${{ github.event.client_payload.release_repo }}
-          GITHUB_TOKEN: ${{ secrets.UPDATE_TESTING_SECRET }}
+          GITHUB_TOKEN: ${{ secrets.janus-java-workflow }}
       with:
         repository: ${{ github.event.client_payload.release_repo }}
         prerelease: true
